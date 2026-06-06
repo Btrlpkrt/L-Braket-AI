@@ -1,5 +1,7 @@
+
 import streamlit as st
 import pandas as pd
+import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.patches import Rectangle
 from sklearn.ensemble import RandomForestRegressor
@@ -51,6 +53,9 @@ st.markdown("""
         font-size: .78rem;
         margin-top: .35rem;
     }
+    h3 {
+        color: #0B1F3A !important;
+    }
     .info-box {
         background: #eff6ff;
         color: #1e3a8a;
@@ -67,33 +72,22 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-
 @st.cache_data
 def load_data():
     return pd.read_csv("L_Braket_Temiz_Veriler.csv")
 
-
 @st.cache_resource
 def train_models(data):
     X = data[["L1", "L2", "t", "d"]]
-
     stress_model = RandomForestRegressor(
-        n_estimators=500,
-        random_state=42,
-        min_samples_leaf=1
+        n_estimators=500, random_state=42, min_samples_leaf=1
     )
-
     displacement_model = RandomForestRegressor(
-        n_estimators=500,
-        random_state=42,
-        min_samples_leaf=1
+        n_estimators=500, random_state=42, min_samples_leaf=1
     )
-
     stress_model.fit(X, data["Stress"])
     displacement_model.fit(X, data["Displacement"])
-
     return stress_model, displacement_model
-
 
 df = load_data()
 stress_model, displacement_model = train_models(df)
@@ -104,34 +98,19 @@ with st.sidebar:
 
     l1 = st.slider(
         "L1 uzunluğu (mm)",
-        float(df["L1"].min()),
-        float(df["L1"].max()),
-        80.0,
-        1.0
+        float(df["L1"].min()), float(df["L1"].max()), 80.0, 1.0
     )
-
     l2 = st.slider(
         "L2 uzunluğu (mm)",
-        float(df["L2"].min()),
-        float(df["L2"].max()),
-        60.0,
-        1.0
+        float(df["L2"].min()), float(df["L2"].max()), 60.0, 1.0
     )
-
     thickness = st.slider(
         "Et kalınlığı t (mm)",
-        float(df["t"].min()),
-        float(df["t"].max()),
-        8.0,
-        0.5
+        float(df["t"].min()), float(df["t"].max()), 8.0, 0.5
     )
-
     diameter = st.slider(
         "Delik çapı d (mm)",
-        float(df["d"].min()),
-        float(df["d"].max()),
-        18.0,
-        0.5
+        float(df["d"].min()), float(df["d"].max()), 18.0, 0.5
     )
 
     st.markdown("---")
@@ -153,11 +132,7 @@ pred_disp = float(displacement_model.predict(new_design)[0])
 stress_percentile = float((df["Stress"] <= pred_stress).mean() * 100)
 disp_percentile = float((df["Displacement"] <= pred_disp).mean() * 100)
 
-st.markdown(
-    '<div class="main-title">🔩 L Braket AI Tasarım Aracı</div>',
-    unsafe_allow_html=True
-)
-
+st.markdown('<div class="main-title">🔩 L Braket AI Tasarım Aracı</div>', unsafe_allow_html=True)
 st.markdown(
     '<div class="sub-title">100 N sabit yük altında geometrik ölçülerden stress ve displacement tahmini yapan etkileşimli makine öğrenmesi uygulaması</div>',
     unsafe_allow_html=True
@@ -166,7 +141,7 @@ st.markdown(
 top_left, top_right = st.columns([1.05, 1.45], gap="large")
 
 with top_left:
-    st.markdown("### Seçilen tasarım")
+    st.markdown('<h3 style="color:#0B1F3A;">Seçilen tasarım</h3>', unsafe_allow_html=True)
 
     fig, ax = plt.subplots(figsize=(6, 5))
     ax.set_xlim(0, 130)
@@ -176,80 +151,89 @@ with top_left:
     x0, y0 = 25, 20
     horizontal = min(90, 35 + l1 * 0.45)
     vertical = min(80, 25 + l2 * 0.50)
-    visual_t = max(7, thickness * 1.4)
 
-    # L braket çizimi
-    ax.plot(
-        [x0, x0 + horizontal],
-        [y0, y0],
-        linewidth=visual_t,
-        solid_capstyle="round",
-        color="#1f77b4",
+    # Braket kalınlığını veri koordinatında göster
+    bar_h = max(8.0, thickness * 1.2)
+
+    # L1 yatay kol
+    l1_rect = Rectangle(
+        (x0, y0),
+        horizontal,
+        bar_h,
+        facecolor="#1f77b4",
+        edgecolor="none",
         zorder=1
     )
+    ax.add_patch(l1_rect)
 
-    ax.plot(
-        [x0, x0],
-        [y0, y0 + vertical],
-        linewidth=visual_t,
-        solid_capstyle="round",
-        color="#ff7f0e",
-        zorder=1
+    # L2 dikey kol
+    l2_rect = Rectangle(
+        (x0, y0),
+        bar_h,
+        vertical,
+        facecolor="#ff7f0e",
+        edgecolor="none",
+        zorder=2
     )
+    ax.add_patch(l2_rect)
 
-    # Delik L1 üzerinde
-    # Teknik resim mantığında boş silindir/oyuk gibi:
-    # arası beyaz, kenarları iki paralel siyah çizgi
-    hole_x = x0 + horizontal * 0.72
-    hole_y = y0
+    # Delik L1 üzerinde; çap değeri arttıkça görünür genişlik de orantılı artar.
+    hole_center_x = x0 + horizontal * 0.72
+    diameter_min = float(df["d"].min())
+    diameter_max = float(df["d"].max())
 
-    hole_gap = max(2.5, diameter * 0.08)   # iki çizgi arası yarı mesafe
-    hole_half = max(6, diameter * 0.22)    # gösterim yüksekliği
+    # Çapı görsel olarak 0.28*bar_h ile 0.78*bar_h arasında ölçekle
+    if diameter_max > diameter_min:
+        diameter_ratio = (diameter - diameter_min) / (diameter_max - diameter_min)
+    else:
+        diameter_ratio = 0.5
 
-    # Siyah çizgiler mavi çizginin dışına taşmasın
-    max_half = visual_t * 0.42
-    hole_half = min(hole_half, max_half)
+    hole_w = bar_h * (0.28 + 0.50 * diameter_ratio)
+    hole_h = bar_h * 0.78
 
-    # Aradaki beyaz boşluk
+    hole_left = hole_center_x - hole_w / 2
+    hole_bottom = y0 + (bar_h - hole_h) / 2
+
+    # İki siyah çizgi arasındaki beyaz boşluk
     white_rect = Rectangle(
-        (hole_x - hole_gap, hole_y - hole_half),
-        2 * hole_gap,
-        2 * hole_half,
+        (hole_left, hole_bottom),
+        hole_w,
+        hole_h,
         facecolor="white",
         edgecolor="none",
         zorder=5
     )
     ax.add_patch(white_rect)
 
-    # Sol siyah çizgi
+    # Siyah sınırlar mavi kolun dışına taşmaz
     ax.plot(
-        [hole_x - hole_gap, hole_x - hole_gap],
-        [hole_y - hole_half, hole_y + hole_half],
+        [hole_left, hole_left],
+        [hole_bottom, hole_bottom + hole_h],
         color="black",
         linewidth=1.8,
+        solid_capstyle="butt",
         zorder=6
     )
 
-    # Sağ siyah çizgi
     ax.plot(
-        [hole_x + hole_gap, hole_x + hole_gap],
-        [hole_y - hole_half, hole_y + hole_half],
+        [hole_left + hole_w, hole_left + hole_w],
+        [hole_bottom, hole_bottom + hole_h],
         color="black",
         linewidth=1.8,
+        solid_capstyle="butt",
         zorder=6
     )
 
-    # Ölçü yazıları
     ax.annotate(
         f"L1 = {l1:.0f} mm",
-        xy=(x0 + horizontal / 2, y0 - 13),
+        xy=(x0 + horizontal / 2, y0 - 10),
         ha="center",
         fontsize=11
     )
 
     ax.annotate(
         f"L2 = {l2:.0f} mm",
-        xy=(x0 - 13, y0 + vertical / 2),
+        xy=(x0 - 10, y0 + vertical / 2),
         va="center",
         ha="center",
         rotation=90,
@@ -257,8 +241,8 @@ with top_left:
     )
 
     ax.text(
-        hole_x,
-        hole_y + hole_half + 9,
+        hole_center_x,
+        y0 + bar_h + 10,
         f"Ø {diameter:.1f} mm",
         va="bottom",
         ha="center",
@@ -270,10 +254,9 @@ with top_left:
     st.pyplot(fig, use_container_width=True)
 
 with top_right:
-    st.markdown("### Yapay zekâ tahmini")
+    st.markdown('<h3 style="color:#0B1F3A;">Yapay zekâ tahmini</h3>', unsafe_allow_html=True)
 
     c1, c2 = st.columns(2)
-
     with c1:
         st.markdown(f"""
         <div class="result-card">
@@ -293,7 +276,6 @@ with top_right:
         """, unsafe_allow_html=True)
 
     st.markdown("<br>", unsafe_allow_html=True)
-
     st.markdown(f"""
     <div class="info-box">
         Bu tasarımın tahmini stress değeri veri setindeki örneklerin yaklaşık
@@ -304,7 +286,7 @@ with top_right:
     """, unsafe_allow_html=True)
 
 st.markdown("---")
-st.markdown("### Tasarım karşılaştırması")
+st.markdown('<h3 style="color:#0B1F3A;">Tasarım karşılaştırması</h3>', unsafe_allow_html=True)
 
 nearest = df.copy()
 nearest["Uzaklık"] = (
@@ -317,7 +299,6 @@ nearest["Uzaklık"] = (
 nearest = nearest.nsmallest(5, "Uzaklık")[
     ["L1", "L2", "t", "d", "Stress", "Displacement"]
 ]
-
 st.dataframe(nearest, use_container_width=True, hide_index=True)
 
 chart_df = pd.DataFrame({
@@ -331,12 +312,10 @@ st.bar_chart(chart_df)
 with st.expander("Projenin çalışma mantığı"):
     st.write(
         """
-        Model; L1, L2, et kalınlığı ve delik çapını giriş olarak alır.
-        Tüm eğitim verileri 100 N sabit yük altında elde edilmiştir.
-        Model, bu verilerdeki örüntüleri öğrenerek yeni bir L braket tasarımı için
-        stress ve displacement değerlerini tahmin eder.
-        Bu uygulama yalnızca 100 N yük altındaki hızlı ön değerlendirme içindir;
-        nihai mühendislik doğrulaması için sonlu elemanlar analizi kullanılmalıdır.
+        Model; L1, L2, et kalınlığı ve delik çapını giriş olarak alır. Tüm eğitim verileri 100 N sabit yük altında elde edilmiştir.
+        Eğitim verilerindeki örüntüleri öğrenerek yeni tasarım için stress ve
+        displacement değerlerini tahmin eder. Bu uygulama yalnızca 100 N yük altındaki hızlı ön değerlendirme
+        içindir; farklı yük değerlerinde yeniden analiz veya yeniden eğitim gerekir. Nihai mühendislik doğrulaması sonlu elemanlar analiziyle yapılmalıdır.
         """
     )
 
