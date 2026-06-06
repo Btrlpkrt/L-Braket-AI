@@ -420,26 +420,26 @@ with top_right:
 
     st.markdown("<br>", unsafe_allow_html=True)
 
-st.markdown(
+    st.markdown(
         f"""
-    <div class="recommendation-card">
-        <div class="recommendation-title">✓ Önerilen uygun tasarım</div>
-        <div class="recommendation-values">
-            <b>L1:</b> {recommended['L1']:.0f} mm &nbsp; | &nbsp;
-            <b>L2:</b> {recommended['L2']:.0f} mm &nbsp; | &nbsp;
-            <b>Et kalınlığı:</b> {recommended['t']:.1f} mm &nbsp; | &nbsp;
-            <b>Delik çapı:</b> {recommended['d']:.1f} mm<br>
-            <b>Stress:</b> {recommended['Stress']:.4f} MPa &nbsp; | &nbsp;
-            <b>Displacement:</b> {recommended['Displacement']:.4f} mm
+        <div class="recommendation-card">
+            <div class="recommendation-title">✓ Önerilen uygun tasarım</div>
+            <div class="recommendation-values">
+                <b>L1:</b> {recommended['L1']:.0f} mm &nbsp; | &nbsp;
+                <b>L2:</b> {recommended['L2']:.0f} mm &nbsp; | &nbsp;
+                <b>Et kalınlığı:</b> {recommended['t']:.1f} mm &nbsp; | &nbsp;
+                <b>Delik çapı:</b> {recommended['d']:.1f} mm<br>
+                <b>Stress:</b> {recommended['Stress']:.4f} MPa &nbsp; | &nbsp;
+                <b>Displacement:</b> {recommended['Displacement']:.4f} mm
+            </div>
+            <div class="recommendation-note">
+                Bu tavsiye, seçtiğiniz ölçülere en yakın 5 gerçek analiz sonucu içinden
+                stress ve displacement değerleri eşit ağırlıkla değerlendirilerek belirlenmiştir.
+            </div>
         </div>
-        <div class="recommendation-note">
-            Bu tavsiye, seçtiğiniz ölçülere en yakın 5 gerçek analiz sonucu içinden
-            stress ve displacement değerleri eşit ağırlıkla değerlendirilerek belirlenmiştir.
-        </div>
-    </div>
-    """,
-    unsafe_allow_html=True
-)
+        """,
+        unsafe_allow_html=True
+    )
 
 
 st.markdown("---")
