@@ -1,7 +1,7 @@
 import streamlit as st
 import pandas as pd
-import numpy as np
 import matplotlib.pyplot as plt
+from matplotlib.patches import Rectangle
 from sklearn.ensemble import RandomForestRegressor
 
 st.set_page_config(
@@ -184,7 +184,8 @@ with top_left:
         [y0, y0],
         linewidth=visual_t,
         solid_capstyle="round",
-        color="#1f77b4"
+        color="#1f77b4",
+        zorder=1
     )
 
     ax.plot(
@@ -192,17 +193,35 @@ with top_left:
         [y0, y0 + vertical],
         linewidth=visual_t,
         solid_capstyle="round",
-        color="#ff7f0e"
+        color="#ff7f0e",
+        zorder=1
     )
 
     # Delik L1 üzerinde
-    # Teknik resim mantığında boş silindir gibi: iki paralel çizgi olarak gösterilir
+    # Teknik resim mantığında boş silindir/oyuk gibi:
+    # arası beyaz, kenarları iki paralel siyah çizgi
     hole_x = x0 + horizontal * 0.72
     hole_y = y0
 
-    hole_gap = max(2.5, diameter * 0.08)   # çizgiler arası yarı mesafe
-    hole_half = max(6, diameter * 0.22)    # çizgilerin yarı yüksekliği
+    hole_gap = max(2.5, diameter * 0.08)   # iki çizgi arası yarı mesafe
+    hole_half = max(6, diameter * 0.22)    # gösterim yüksekliği
 
+    # Siyah çizgiler mavi çizginin dışına taşmasın
+    max_half = visual_t * 0.42
+    hole_half = min(hole_half, max_half)
+
+    # Aradaki beyaz boşluk
+    white_rect = Rectangle(
+        (hole_x - hole_gap, hole_y - hole_half),
+        2 * hole_gap,
+        2 * hole_half,
+        facecolor="white",
+        edgecolor="none",
+        zorder=5
+    )
+    ax.add_patch(white_rect)
+
+    # Sol siyah çizgi
     ax.plot(
         [hole_x - hole_gap, hole_x - hole_gap],
         [hole_y - hole_half, hole_y + hole_half],
@@ -211,6 +230,7 @@ with top_left:
         zorder=6
     )
 
+    # Sağ siyah çizgi
     ax.plot(
         [hole_x + hole_gap, hole_x + hole_gap],
         [hole_y - hole_half, hole_y + hole_half],
