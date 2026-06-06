@@ -89,26 +89,17 @@ st.markdown("""
 
 
     .author-name {
-        position: fixed;
-        top: 1rem;
-        right: 1.5rem;
+        width: 100%;
+        text-align: right;
         color: #0B1F3A;
         font-size: 1.05rem;
         font-weight: 800;
-        z-index: 9999;
-        background: rgba(255, 255, 255, 0.88);
-        padding: 0.35rem 0.7rem;
-        border-radius: 10px;
+        margin-bottom: 0.4rem;
+        padding-right: 0.2rem;
     }
 
 </style>
 """, unsafe_allow_html=True)
-
-st.markdown(
-    '<div class="author-name">Baturalp</div>',
-    unsafe_allow_html=True
-)
-
 
 @st.cache_data
 def load_data():
@@ -194,6 +185,11 @@ pred_disp = float(displacement_model.predict(new_design)[0])
 
 stress_percentile = float((df["Stress"] <= pred_stress).mean() * 100)
 disp_percentile = float((df["Displacement"] <= pred_disp).mean() * 100)
+
+st.markdown(
+    '<div class="author-name">Baturalp</div>',
+    unsafe_allow_html=True
+)
 
 st.markdown(
     '<div class="main-title">🔩 L Braket AI Tasarım Aracı</div>',
