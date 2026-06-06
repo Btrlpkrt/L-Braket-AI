@@ -1,4 +1,3 @@
-
 import streamlit as st
 import pandas as pd
 import numpy as np
@@ -68,22 +67,33 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
+
 @st.cache_data
 def load_data():
     return pd.read_csv("L_Braket_Temiz_Veriler.csv")
 
+
 @st.cache_resource
 def train_models(data):
     X = data[["L1", "L2", "t", "d"]]
+
     stress_model = RandomForestRegressor(
-        n_estimators=500, random_state=42, min_samples_leaf=1
+        n_estimators=500,
+        random_state=42,
+        min_samples_leaf=1
     )
+
     displacement_model = RandomForestRegressor(
-        n_estimators=500, random_state=42, min_samples_leaf=1
+        n_estimators=500,
+        random_state=42,
+        min_samples_leaf=1
     )
+
     stress_model.fit(X, data["Stress"])
     displacement_model.fit(X, data["Displacement"])
+
     return stress_model, displacement_model
+
 
 df = load_data()
 stress_model, displacement_model = train_models(df)
@@ -94,19 +104,34 @@ with st.sidebar:
 
     l1 = st.slider(
         "L1 uzunluğu (mm)",
-        float(df["L1"].min()), float(df["L1"].max()), 80.0, 1.0
+        float(df["L1"].min()),
+        float(df["L1"].max()),
+        80.0,
+        1.0
     )
+
     l2 = st.slider(
         "L2 uzunluğu (mm)",
-        float(df["L2"].min()), float(df["L2"].max()), 60.0, 1.0
+        float(df["L2"].min()),
+        float(df["L2"].max()),
+        60.0,
+        1.0
     )
+
     thickness = st.slider(
         "Et kalınlığı t (mm)",
-        float(df["t"].min()), float(df["t"].max()), 8.0, 0.5
+        float(df["t"].min()),
+        float(df["t"].max()),
+        8.0,
+        0.5
     )
+
     diameter = st.slider(
         "Delik çapı d (mm)",
-        float(df["d"].min()), float(df["d"].max()), 18.0, 0.5
+        float(df["d"].min()),
+        float(df["d"].max()),
+        18.0,
+        0.5
     )
 
     st.markdown("---")
@@ -128,7 +153,11 @@ pred_disp = float(displacement_model.predict(new_design)[0])
 stress_percentile = float((df["Stress"] <= pred_stress).mean() * 100)
 disp_percentile = float((df["Displacement"] <= pred_disp).mean() * 100)
 
-st.markdown('<div class="main-title">🔩 L Braket AI Tasarım Aracı</div>', unsafe_allow_html=True)
+st.markdown(
+    '<div class="main-title">🔩 L Braket AI Tasarım Aracı</div>',
+    unsafe_allow_html=True
+)
+
 st.markdown(
     '<div class="sub-title">100 N sabit yük altında geometrik ölçülerden stress ve displacement tahmini yapan etkileşimli makine öğrenmesi uygulaması</div>',
     unsafe_allow_html=True
@@ -149,40 +178,55 @@ with top_left:
     vertical = min(80, 25 + l2 * 0.50)
     visual_t = max(7, thickness * 1.4)
 
+    # L braket çizimi
     ax.plot(
         [x0, x0 + horizontal],
         [y0, y0],
         linewidth=visual_t,
-        solid_capstyle="round"
+        solid_capstyle="round",
+        color="#1f77b4"
     )
+
     ax.plot(
         [x0, x0],
         [y0, y0 + vertical],
         linewidth=visual_t,
-        solid_capstyle="round"
+        solid_capstyle="round",
+        color="#ff7f0e"
     )
 
-    # Delik L1 (yatay kol) üzerindedir.
-    # Bu nedenle mevcut bakışta delik görünür ve şematik olarak daire ile gösterilir.
+    # Delik L1 üzerinde
+    # Teknik resim mantığında boş silindir gibi: iki paralel çizgi olarak gösterilir
     hole_x = x0 + horizontal * 0.72
     hole_y = y0
-    hole_r = max(3.2, diameter * 0.24)
-    hole = plt.Circle(
-        (hole_x, hole_y),
-        hole_r,
-        facecolor="white",
-        edgecolor="black",
-        linewidth=1.6,
-        zorder=5
-    )
-    ax.add_patch(hole)
 
+    hole_gap = max(2.5, diameter * 0.08)   # çizgiler arası yarı mesafe
+    hole_half = max(6, diameter * 0.22)    # çizgilerin yarı yüksekliği
+
+    ax.plot(
+        [hole_x - hole_gap, hole_x - hole_gap],
+        [hole_y - hole_half, hole_y + hole_half],
+        color="black",
+        linewidth=1.8,
+        zorder=6
+    )
+
+    ax.plot(
+        [hole_x + hole_gap, hole_x + hole_gap],
+        [hole_y - hole_half, hole_y + hole_half],
+        color="black",
+        linewidth=1.8,
+        zorder=6
+    )
+
+    # Ölçü yazıları
     ax.annotate(
         f"L1 = {l1:.0f} mm",
         xy=(x0 + horizontal / 2, y0 - 13),
         ha="center",
         fontsize=11
     )
+
     ax.annotate(
         f"L2 = {l2:.0f} mm",
         xy=(x0 - 13, y0 + vertical / 2),
@@ -191,14 +235,16 @@ with top_left:
         rotation=90,
         fontsize=11
     )
+
     ax.text(
         hole_x,
-        hole_y + hole_r + 9,
+        hole_y + hole_half + 9,
         f"Ø {diameter:.1f} mm",
         va="bottom",
         ha="center",
         fontsize=10
     )
+
     ax.set_title(f"Et kalınlığı: {thickness:.1f} mm", fontsize=12, pad=12)
 
     st.pyplot(fig, use_container_width=True)
@@ -207,6 +253,7 @@ with top_right:
     st.markdown("### Yapay zekâ tahmini")
 
     c1, c2 = st.columns(2)
+
     with c1:
         st.markdown(f"""
         <div class="result-card">
@@ -226,6 +273,7 @@ with top_right:
         """, unsafe_allow_html=True)
 
     st.markdown("<br>", unsafe_allow_html=True)
+
     st.markdown(f"""
     <div class="info-box">
         Bu tasarımın tahmini stress değeri veri setindeki örneklerin yaklaşık
@@ -249,6 +297,7 @@ nearest["Uzaklık"] = (
 nearest = nearest.nsmallest(5, "Uzaklık")[
     ["L1", "L2", "t", "d", "Stress", "Displacement"]
 ]
+
 st.dataframe(nearest, use_container_width=True, hide_index=True)
 
 chart_df = pd.DataFrame({
@@ -262,10 +311,12 @@ st.bar_chart(chart_df)
 with st.expander("Projenin çalışma mantığı"):
     st.write(
         """
-        Model; L1, L2, et kalınlığı ve delik çapını giriş olarak alır. Tüm eğitim verileri 100 N sabit yük altında elde edilmiştir.
-        Eğitim verilerindeki örüntüleri öğrenerek yeni tasarım için stress ve
-        displacement değerlerini tahmin eder. Bu uygulama yalnızca 100 N yük altındaki hızlı ön değerlendirme
-        içindir; farklı yük değerlerinde yeniden analiz veya yeniden eğitim gerekir. Nihai mühendislik doğrulaması sonlu elemanlar analiziyle yapılmalıdır.
+        Model; L1, L2, et kalınlığı ve delik çapını giriş olarak alır.
+        Tüm eğitim verileri 100 N sabit yük altında elde edilmiştir.
+        Model, bu verilerdeki örüntüleri öğrenerek yeni bir L braket tasarımı için
+        stress ve displacement değerlerini tahmin eder.
+        Bu uygulama yalnızca 100 N yük altındaki hızlı ön değerlendirme içindir;
+        nihai mühendislik doğrulaması için sonlu elemanlar analizi kullanılmalıdır.
         """
     )
 
