@@ -211,6 +211,48 @@ pred_disp = float(displacement_model.predict(new_design)[0])
 stress_percentile = float((df["Stress"] <= pred_stress).mean() * 100)
 disp_percentile = float((df["Displacement"] <= pred_disp).mean() * 100)
 
+nearest = df.copy()
+nearest["Uzaklık"] = (
+    ((nearest["L1"] - l1) / max(df["L1"].max() - df["L1"].min(), 1)) ** 2
+    + ((nearest["L2"] - l2) / max(df["L2"].max() - df["L2"].min(), 1)) ** 2
+    + ((nearest["t"] - thickness) / max(df["t"].max() - df["t"].min(), 1)) ** 2
+    + ((nearest["d"] - diameter) / max(df["d"].max() - df["d"].min(), 1)) ** 2
+) ** 0.5
+
+nearest = nearest.nsmallest(5, "Uzaklık")[[
+    "L1", "L2", "t", "d", "Stress", "Displacement"
+]].copy()
+
+# Kullanıcının seçtiği geometriye en yakın 5 gerçek tasarım arasından tavsiye oluştur.
+# Stress ve displacement değerleri kendi aralıklarına göre normalize edilir ve
+# eşit ağırlıklı birleşik puan hesaplanır. Düşük puan daha uygundur.
+stress_range = nearest["Stress"].max() - nearest["Stress"].min()
+disp_range = nearest["Displacement"].max() - nearest["Displacement"].min()
+
+if stress_range == 0:
+    nearest["Normalize Stress"] = 0.0
+else:
+    nearest["Normalize Stress"] = (
+        nearest["Stress"] - nearest["Stress"].min()
+    ) / stress_range
+
+if disp_range == 0:
+    nearest["Normalize Displacement"] = 0.0
+else:
+    nearest["Normalize Displacement"] = (
+        nearest["Displacement"] - nearest["Displacement"].min()
+    ) / disp_range
+
+nearest["Uygunluk Puanı"] = (
+    0.50 * nearest["Normalize Stress"]
+    + 0.50 * nearest["Normalize Displacement"]
+)
+
+recommended = nearest.sort_values(
+    ["Uygunluk Puanı", "Stress", "Displacement"]
+).iloc[0]
+
+
 st.markdown(
     '<div class="author-name">BİLGİSAYAR DESTEKLİ TASARIMDA PROGRAMLAMA TEKNİKLERİ FİNAL PROJESİ - BATURALP</div>',
     unsafe_allow_html=True
@@ -376,55 +418,10 @@ with top_right:
     </div>
     """, unsafe_allow_html=True)
 
-st.markdown("---")
-st.markdown(
-    '<div class="section-title">Tasarım karşılaştırması</div>',
-    unsafe_allow_html=True
-)
-
-nearest = df.copy()
-nearest["Uzaklık"] = (
-    ((nearest["L1"] - l1) / max(df["L1"].max() - df["L1"].min(), 1)) ** 2
-    + ((nearest["L2"] - l2) / max(df["L2"].max() - df["L2"].min(), 1)) ** 2
-    + ((nearest["t"] - thickness) / max(df["t"].max() - df["t"].min(), 1)) ** 2
-    + ((nearest["d"] - diameter) / max(df["d"].max() - df["d"].min(), 1)) ** 2
-) ** 0.5
-
-nearest = nearest.nsmallest(5, "Uzaklık")[[
-    "L1", "L2", "t", "d", "Stress", "Displacement"
-]].copy()
-
-# Kullanıcının seçtiği geometriye en yakın 5 gerçek tasarım arasından tavsiye oluştur.
-# Stress ve displacement değerleri kendi aralıklarına göre normalize edilir ve
-# eşit ağırlıklı birleşik puan hesaplanır. Düşük puan daha uygundur.
-stress_range = nearest["Stress"].max() - nearest["Stress"].min()
-disp_range = nearest["Displacement"].max() - nearest["Displacement"].min()
-
-if stress_range == 0:
-    nearest["Normalize Stress"] = 0.0
-else:
-    nearest["Normalize Stress"] = (
-        nearest["Stress"] - nearest["Stress"].min()
-    ) / stress_range
-
-if disp_range == 0:
-    nearest["Normalize Displacement"] = 0.0
-else:
-    nearest["Normalize Displacement"] = (
-        nearest["Displacement"] - nearest["Displacement"].min()
-    ) / disp_range
-
-nearest["Uygunluk Puanı"] = (
-    0.50 * nearest["Normalize Stress"]
-    + 0.50 * nearest["Normalize Displacement"]
-)
-
-recommended = nearest.sort_values(
-    ["Uygunluk Puanı", "Stress", "Displacement"]
-).iloc[0]
+    st.markdown("<br>", unsafe_allow_html=True)
 
 st.markdown(
-    f"""
+        f"""
     <div class="recommendation-card">
         <div class="recommendation-title">✓ Önerilen uygun tasarım</div>
         <div class="recommendation-values">
@@ -441,6 +438,13 @@ st.markdown(
         </div>
     </div>
     """,
+    unsafe_allow_html=True
+)
+
+
+st.markdown("---")
+st.markdown(
+    '<div class="section-title">Tasarım karşılaştırması</div>',
     unsafe_allow_html=True
 )
 
