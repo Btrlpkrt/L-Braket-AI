@@ -70,6 +70,23 @@ st.markdown("""
     div[data-testid="stSidebar"] * {
         color: white;
     }
+
+    div[data-testid="stExpander"] summary,
+    div[data-testid="stExpander"] summary * {
+        color: #000000 !important;
+    }
+
+    div[data-testid="stExpander"] div[data-testid="stMarkdownContainer"],
+    div[data-testid="stExpander"] div[data-testid="stMarkdownContainer"] * {
+        color: #000000 !important;
+    }
+
+    .footer-text {
+        color: #000000;
+        font-size: 0.85rem;
+        margin-top: 1rem;
+    }
+
 </style>
 """, unsafe_allow_html=True)
 
@@ -346,6 +363,12 @@ with st.expander("Projenin çalışma mantığı"):
         """
     )
 
-st.caption(
-    "Yüksek lisans final projesi — 100 N Yük Altında Makine Öğrenmesi ile L Braket Performans Tahmini"
+st.markdown(
+    """
+    <div class="footer-text">
+        Yüksek lisans final projesi — 100 N Yük Altında Makine Öğrenmesi ile
+        L Braket Performans Tahmini
+    </div>
+    """,
+    unsafe_allow_html=True
 )
