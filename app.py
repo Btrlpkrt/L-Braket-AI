@@ -98,6 +98,31 @@ st.markdown("""
         padding-right: 0.2rem;
     }
 
+
+    .recommendation-card {
+        background: #ecfdf5;
+        color: #064e3b;
+        padding: 1.15rem 1.25rem;
+        border-radius: 16px;
+        border: 1px solid #a7f3d0;
+        box-shadow: 0 6px 18px rgba(6, 78, 59, 0.07);
+        margin: 0.75rem 0 1.15rem 0;
+    }
+    .recommendation-title {
+        font-size: 1.05rem;
+        font-weight: 800;
+        margin-bottom: 0.45rem;
+    }
+    .recommendation-values {
+        font-size: 0.98rem;
+        line-height: 1.75;
+    }
+    .recommendation-note {
+        font-size: 0.78rem;
+        color: #047857;
+        margin-top: 0.55rem;
+    }
+
 </style>
 """, unsafe_allow_html=True)
 
@@ -365,9 +390,61 @@ nearest["Uzaklık"] = (
     + ((nearest["d"] - diameter) / max(df["d"].max() - df["d"].min(), 1)) ** 2
 ) ** 0.5
 
-nearest = nearest.nsmallest(5, "Uzaklık")[
-    ["L1", "L2", "t", "d", "Stress", "Displacement"]
-]
+nearest = nearest.nsmallest(5, "Uzaklık")[[
+    "L1", "L2", "t", "d", "Stress", "Displacement"
+]].copy()
+
+# Kullanıcının seçtiği geometriye en yakın 5 gerçek tasarım arasından tavsiye oluştur.
+# Stress ve displacement değerleri kendi aralıklarına göre normalize edilir ve
+# eşit ağırlıklı birleşik puan hesaplanır. Düşük puan daha uygundur.
+stress_range = nearest["Stress"].max() - nearest["Stress"].min()
+disp_range = nearest["Displacement"].max() - nearest["Displacement"].min()
+
+if stress_range == 0:
+    nearest["Normalize Stress"] = 0.0
+else:
+    nearest["Normalize Stress"] = (
+        nearest["Stress"] - nearest["Stress"].min()
+    ) / stress_range
+
+if disp_range == 0:
+    nearest["Normalize Displacement"] = 0.0
+else:
+    nearest["Normalize Displacement"] = (
+        nearest["Displacement"] - nearest["Displacement"].min()
+    ) / disp_range
+
+nearest["Uygunluk Puanı"] = (
+    0.50 * nearest["Normalize Stress"]
+    + 0.50 * nearest["Normalize Displacement"]
+)
+
+recommended = nearest.sort_values(
+    ["Uygunluk Puanı", "Stress", "Displacement"]
+).iloc[0]
+
+st.markdown(
+    f"""
+    <div class="recommendation-card">
+        <div class="recommendation-title">✓ Önerilen uygun tasarım</div>
+        <div class="recommendation-values">
+            <b>L1:</b> {recommended['L1']:.0f} mm &nbsp; | &nbsp;
+            <b>L2:</b> {recommended['L2']:.0f} mm &nbsp; | &nbsp;
+            <b>Et kalınlığı:</b> {recommended['t']:.1f} mm &nbsp; | &nbsp;
+            <b>Delik çapı:</b> {recommended['d']:.1f} mm<br>
+            <b>Stress:</b> {recommended['Stress']:.4f} MPa &nbsp; | &nbsp;
+            <b>Displacement:</b> {recommended['Displacement']:.4f} mm
+        </div>
+        <div class="recommendation-note">
+            Bu tavsiye, seçtiğiniz ölçülere en yakın 5 gerçek analiz sonucu içinden
+            stress ve displacement değerleri eşit ağırlıkla değerlendirilerek belirlenmiştir.
+        </div>
+    </div>
+    """,
+    unsafe_allow_html=True
+)
+
+nearest = nearest[["L1", "L2", "t", "d", "Stress", "Displacement"]]
 
 nearest = nearest.rename(columns={
     "L1": "L1 (mm)",
@@ -394,7 +471,9 @@ with st.expander("Projenin çalışma mantığı"):
         Model; L1, L2, et kalınlığı ve delik çapını giriş olarak alır.
         Tüm eğitim verileri 100 N sabit yük altında elde edilmiştir. Stress birimi MPa (N/mm²), displacement birimi mm olarak gösterilmektedir.
         Model, bu verilerdeki örüntüleri öğrenerek yeni bir L braket tasarımı için
-        stress ve displacement değerlerini tahmin eder.
+        stress ve displacement değerlerini tahmin eder. Tavsiye bölümü ise seçilen
+        ölçülere en yakın 5 gerçek tasarım arasından, normalize edilmiş stress ve
+        displacement değerlerini eşit ağırlıkla değerlendirerek uygun tasarımı belirler.
         Bu uygulama yalnızca 100 N yük altındaki hızlı ön değerlendirme içindir;
         nihai mühendislik doğrulaması için sonlu elemanlar analizi kullanılmalıdır.
         """
