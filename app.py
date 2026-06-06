@@ -87,8 +87,27 @@ st.markdown("""
         margin-top: 1rem;
     }
 
+
+    .author-name {
+        position: fixed;
+        top: 1rem;
+        right: 1.5rem;
+        color: #0B1F3A;
+        font-size: 1.05rem;
+        font-weight: 800;
+        z-index: 9999;
+        background: rgba(255, 255, 255, 0.88);
+        padding: 0.35rem 0.7rem;
+        border-radius: 10px;
+    }
+
 </style>
 """, unsafe_allow_html=True)
+
+st.markdown(
+    '<div class="author-name">Baturalp</div>',
+    unsafe_allow_html=True
+)
 
 
 @st.cache_data
