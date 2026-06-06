@@ -1,0 +1,267 @@
+
+import streamlit as st
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+from sklearn.ensemble import RandomForestRegressor
+
+st.set_page_config(
+    page_title="L Braket AI Tasarım Aracı",
+    page_icon="🔩",
+    layout="wide",
+    initial_sidebar_state="expanded",
+)
+
+st.markdown("""
+<style>
+    .stApp {
+        background: linear-gradient(180deg, #f7f8fb 0%, #eef1f6 100%);
+    }
+    .main-title {
+        font-size: 2.15rem;
+        font-weight: 800;
+        color: #111827;
+        margin-bottom: .25rem;
+    }
+    .sub-title {
+        color: #6b7280;
+        margin-bottom: 1.5rem;
+    }
+    .result-card {
+        background: white;
+        padding: 1.35rem;
+        border-radius: 18px;
+        border: 1px solid #e5e7eb;
+        box-shadow: 0 8px 24px rgba(17, 24, 39, .07);
+        min-height: 145px;
+    }
+    .result-label {
+        color: #6b7280;
+        font-size: .82rem;
+        font-weight: 700;
+        letter-spacing: .05em;
+    }
+    .result-value {
+        color: #111827;
+        font-size: 2rem;
+        font-weight: 800;
+        margin-top: .55rem;
+    }
+    .result-note {
+        color: #9ca3af;
+        font-size: .78rem;
+        margin-top: .35rem;
+    }
+    .info-box {
+        background: #eff6ff;
+        color: #1e3a8a;
+        padding: 1rem 1.1rem;
+        border-radius: 14px;
+        border: 1px solid #bfdbfe;
+    }
+    div[data-testid="stSidebar"] {
+        background: #111827;
+    }
+    div[data-testid="stSidebar"] * {
+        color: white;
+    }
+</style>
+""", unsafe_allow_html=True)
+
+@st.cache_data
+def load_data():
+    return pd.read_csv("L_Braket_Temiz_Veriler.csv")
+
+@st.cache_resource
+def train_models(data):
+    X = data[["L1", "L2", "t", "d"]]
+    stress_model = RandomForestRegressor(
+        n_estimators=500, random_state=42, min_samples_leaf=1
+    )
+    displacement_model = RandomForestRegressor(
+        n_estimators=500, random_state=42, min_samples_leaf=1
+    )
+    stress_model.fit(X, data["Stress"])
+    displacement_model.fit(X, data["Displacement"])
+    return stress_model, displacement_model
+
+df = load_data()
+stress_model, displacement_model = train_models(df)
+
+with st.sidebar:
+    st.markdown("## Tasarım Parametreleri")
+    st.caption("Değerleri değiştirerek yeni bir L braket tasarımı oluşturun.")
+
+    l1 = st.slider(
+        "L1 uzunluğu (mm)",
+        float(df["L1"].min()), float(df["L1"].max()), 80.0, 1.0
+    )
+    l2 = st.slider(
+        "L2 uzunluğu (mm)",
+        float(df["L2"].min()), float(df["L2"].max()), 60.0, 1.0
+    )
+    thickness = st.slider(
+        "Et kalınlığı t (mm)",
+        float(df["t"].min()), float(df["t"].max()), 8.0, 0.5
+    )
+    diameter = st.slider(
+        "Delik çapı d (mm)",
+        float(df["d"].min()), float(df["d"].max()), 18.0, 0.5
+    )
+
+    st.markdown("---")
+    st.caption(
+        "Model yalnızca eğitim verisinin ölçü aralıklarında kullanılmalıdır."
+    )
+
+new_design = pd.DataFrame([{
+    "L1": l1,
+    "L2": l2,
+    "t": thickness,
+    "d": diameter,
+}])
+
+pred_stress = float(stress_model.predict(new_design)[0])
+pred_disp = float(displacement_model.predict(new_design)[0])
+
+stress_percentile = float((df["Stress"] <= pred_stress).mean() * 100)
+disp_percentile = float((df["Displacement"] <= pred_disp).mean() * 100)
+
+st.markdown('<div class="main-title">🔩 L Braket AI Tasarım Aracı</div>', unsafe_allow_html=True)
+st.markdown(
+    '<div class="sub-title">Geometrik ölçülerden stress ve displacement tahmini yapan etkileşimli makine öğrenmesi uygulaması</div>',
+    unsafe_allow_html=True
+)
+
+top_left, top_right = st.columns([1.05, 1.45], gap="large")
+
+with top_left:
+    st.markdown("### Seçilen tasarım")
+
+    fig, ax = plt.subplots(figsize=(6, 5))
+    ax.set_xlim(0, 130)
+    ax.set_ylim(0, 110)
+    ax.axis("off")
+
+    x0, y0 = 25, 20
+    horizontal = min(90, 35 + l1 * 0.45)
+    vertical = min(80, 25 + l2 * 0.50)
+    visual_t = max(7, thickness * 1.4)
+
+    ax.plot(
+        [x0, x0 + horizontal],
+        [y0, y0],
+        linewidth=visual_t,
+        solid_capstyle="round"
+    )
+    ax.plot(
+        [x0, x0],
+        [y0, y0 + vertical],
+        linewidth=visual_t,
+        solid_capstyle="round"
+    )
+
+    hole_r = max(3, diameter * 0.24)
+    hole = plt.Circle(
+        (x0 + horizontal * 0.72, y0),
+        hole_r,
+        facecolor="white",
+        edgecolor="black",
+        linewidth=1.5
+    )
+    ax.add_patch(hole)
+
+    ax.annotate(
+        f"L1 = {l1:.0f} mm",
+        xy=(x0 + horizontal / 2, y0 - 13),
+        ha="center",
+        fontsize=11
+    )
+    ax.annotate(
+        f"L2 = {l2:.0f} mm",
+        xy=(x0 - 13, y0 + vertical / 2),
+        va="center",
+        ha="center",
+        rotation=90,
+        fontsize=11
+    )
+    ax.text(
+        x0 + horizontal * 0.72,
+        y0 + 12,
+        f"Ø {diameter:.1f} mm",
+        ha="center",
+        fontsize=10
+    )
+    ax.set_title(f"Et kalınlığı: {thickness:.1f} mm", fontsize=12, pad=12)
+
+    st.pyplot(fig, use_container_width=True)
+
+with top_right:
+    st.markdown("### Yapay zekâ tahmini")
+
+    c1, c2 = st.columns(2)
+    with c1:
+        st.markdown(f"""
+        <div class="result-card">
+            <div class="result-label">TAHMİNİ STRESS</div>
+            <div class="result-value">{pred_stress:.4f}</div>
+            <div class="result-note">Random Forest regresyon tahmini</div>
+        </div>
+        """, unsafe_allow_html=True)
+
+    with c2:
+        st.markdown(f"""
+        <div class="result-card">
+            <div class="result-label">TAHMİNİ DISPLACEMENT</div>
+            <div class="result-value">{pred_disp:.4f}</div>
+            <div class="result-note">Random Forest regresyon tahmini</div>
+        </div>
+        """, unsafe_allow_html=True)
+
+    st.markdown("<br>", unsafe_allow_html=True)
+    st.markdown(f"""
+    <div class="info-box">
+        Bu tasarımın tahmini stress değeri veri setindeki örneklerin yaklaşık
+        <b>%{stress_percentile:.0f}</b>'inden; displacement değeri ise yaklaşık
+        <b>%{disp_percentile:.0f}</b>'inden daha yüksektir.
+        Bu karşılaştırma yalnızca mevcut veri setine göredir.
+    </div>
+    """, unsafe_allow_html=True)
+
+st.markdown("---")
+st.markdown("### Tasarım karşılaştırması")
+
+nearest = df.copy()
+nearest["Uzaklık"] = (
+    ((nearest["L1"] - l1) / max(df["L1"].max() - df["L1"].min(), 1)) ** 2
+    + ((nearest["L2"] - l2) / max(df["L2"].max() - df["L2"].min(), 1)) ** 2
+    + ((nearest["t"] - thickness) / max(df["t"].max() - df["t"].min(), 1)) ** 2
+    + ((nearest["d"] - diameter) / max(df["d"].max() - df["d"].min(), 1)) ** 2
+) ** 0.5
+
+nearest = nearest.nsmallest(5, "Uzaklık")[
+    ["L1", "L2", "t", "d", "Stress", "Displacement"]
+]
+st.dataframe(nearest, use_container_width=True, hide_index=True)
+
+chart_df = pd.DataFrame({
+    "Sonuç": ["Stress", "Displacement"],
+    "Tahmin": [pred_stress, pred_disp],
+    "Veri ortalaması": [df["Stress"].mean(), df["Displacement"].mean()],
+}).set_index("Sonuç")
+
+st.bar_chart(chart_df)
+
+with st.expander("Projenin çalışma mantığı"):
+    st.write(
+        """
+        Model; L1, L2, et kalınlığı ve delik çapını giriş olarak alır.
+        Eğitim verilerindeki örüntüleri öğrenerek yeni tasarım için stress ve
+        displacement değerlerini tahmin eder. Bu uygulama hızlı ön değerlendirme
+        içindir; nihai mühendislik doğrulaması sonlu elemanlar analiziyle yapılmalıdır.
+        """
+    )
+
+st.caption(
+    "Yüksek lisans final projesi — Makine Öğrenmesi ile L Braket Performans Tahmini"
+)
