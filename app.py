@@ -110,8 +110,9 @@ with st.sidebar:
     )
 
     st.markdown("---")
+    st.info("Uygulanan yük: 100 N (sabit)")
     st.caption(
-        "Model yalnızca eğitim verisinin ölçü aralıklarında kullanılmalıdır."
+        "Model yalnızca eğitim verisinin ölçü aralıklarında ve 100 N yük koşulunda kullanılmalıdır."
     )
 
 new_design = pd.DataFrame([{
@@ -129,7 +130,7 @@ disp_percentile = float((df["Displacement"] <= pred_disp).mean() * 100)
 
 st.markdown('<div class="main-title">🔩 L Braket AI Tasarım Aracı</div>', unsafe_allow_html=True)
 st.markdown(
-    '<div class="sub-title">Geometrik ölçülerden stress ve displacement tahmini yapan etkileşimli makine öğrenmesi uygulaması</div>',
+    '<div class="sub-title">100 N sabit yük altında geometrik ölçülerden stress ve displacement tahmini yapan etkileşimli makine öğrenmesi uygulaması</div>',
     unsafe_allow_html=True
 )
 
@@ -161,13 +162,18 @@ with top_left:
         solid_capstyle="round"
     )
 
-    hole_r = max(3, diameter * 0.24)
+    # Delik L1 (yatay kol) üzerindedir.
+    # Bu nedenle mevcut bakışta delik görünür ve şematik olarak daire ile gösterilir.
+    hole_x = x0 + horizontal * 0.72
+    hole_y = y0 + max(visual_t * 0.22, 2.5)
+    hole_r = max(3.2, diameter * 0.24)
     hole = plt.Circle(
-        (x0 + horizontal * 0.72, y0),
+        (hole_x, hole_y),
         hole_r,
         facecolor="white",
         edgecolor="black",
-        linewidth=1.5
+        linewidth=1.6,
+        zorder=5
     )
     ax.add_patch(hole)
 
@@ -186,9 +192,10 @@ with top_left:
         fontsize=11
     )
     ax.text(
-        x0 + horizontal * 0.72,
-        y0 + 12,
-        f"Ø {diameter:.1f} mm",
+        hole_x,
+        hole_y + hole_r + 9,
+        f"Ø {diameter:.1f} mm\n(delik L1 üzerinde)",
+        va="bottom",
         ha="center",
         fontsize=10
     )
@@ -205,7 +212,7 @@ with top_right:
         <div class="result-card">
             <div class="result-label">TAHMİNİ STRESS</div>
             <div class="result-value">{pred_stress:.4f}</div>
-            <div class="result-note">Random Forest regresyon tahmini</div>
+            <div class="result-note">100 N yük altında Random Forest tahmini</div>
         </div>
         """, unsafe_allow_html=True)
 
@@ -214,7 +221,7 @@ with top_right:
         <div class="result-card">
             <div class="result-label">TAHMİNİ DISPLACEMENT</div>
             <div class="result-value">{pred_disp:.4f}</div>
-            <div class="result-note">Random Forest regresyon tahmini</div>
+            <div class="result-note">100 N yük altında Random Forest tahmini</div>
         </div>
         """, unsafe_allow_html=True)
 
@@ -224,7 +231,7 @@ with top_right:
         Bu tasarımın tahmini stress değeri veri setindeki örneklerin yaklaşık
         <b>%{stress_percentile:.0f}</b>'inden; displacement değeri ise yaklaşık
         <b>%{disp_percentile:.0f}</b>'inden daha yüksektir.
-        Bu karşılaştırma yalnızca mevcut veri setine göredir.
+        Bu karşılaştırma yalnızca mevcut veri setine ve 100 N yük koşuluna göredir.
     </div>
     """, unsafe_allow_html=True)
 
@@ -255,13 +262,13 @@ st.bar_chart(chart_df)
 with st.expander("Projenin çalışma mantığı"):
     st.write(
         """
-        Model; L1, L2, et kalınlığı ve delik çapını giriş olarak alır.
+        Model; L1, L2, et kalınlığı ve delik çapını giriş olarak alır. Tüm eğitim verileri 100 N sabit yük altında elde edilmiştir.
         Eğitim verilerindeki örüntüleri öğrenerek yeni tasarım için stress ve
-        displacement değerlerini tahmin eder. Bu uygulama hızlı ön değerlendirme
-        içindir; nihai mühendislik doğrulaması sonlu elemanlar analiziyle yapılmalıdır.
+        displacement değerlerini tahmin eder. Bu uygulama yalnızca 100 N yük altındaki hızlı ön değerlendirme
+        içindir; farklı yük değerlerinde yeniden analiz veya yeniden eğitim gerekir. Nihai mühendislik doğrulaması sonlu elemanlar analiziyle yapılmalıdır.
         """
     )
 
 st.caption(
-    "Yüksek lisans final projesi — Makine Öğrenmesi ile L Braket Performans Tahmini"
+    "Yüksek lisans final projesi — 100 N Yük Altında Makine Öğrenmesi ile L Braket Performans Tahmini"
 )
