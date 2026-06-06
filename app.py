@@ -325,8 +325,8 @@ with top_right:
     with c1:
         st.markdown(f"""
         <div class="result-card">
-            <div class="result-label">TAHMİNİ STRESS</div>
-            <div class="result-value">{pred_stress:.4f}</div>
+            <div class="result-label">TAHMİNİ STRESS (MPa)</div>
+            <div class="result-value">{pred_stress:.4f} <span style="font-size:1rem;color:#6b7280;">MPa</span></div>
             <div class="result-note">100 N yük altında Random Forest tahmini</div>
         </div>
         """, unsafe_allow_html=True)
@@ -334,8 +334,8 @@ with top_right:
     with c2:
         st.markdown(f"""
         <div class="result-card">
-            <div class="result-label">TAHMİNİ DISPLACEMENT</div>
-            <div class="result-value">{pred_disp:.4f}</div>
+            <div class="result-label">TAHMİNİ DISPLACEMENT (mm)</div>
+            <div class="result-value">{pred_disp:.4f} <span style="font-size:1rem;color:#6b7280;">mm</span></div>
             <div class="result-note">100 N yük altında Random Forest tahmini</div>
         </div>
         """, unsafe_allow_html=True)
@@ -369,10 +369,19 @@ nearest = nearest.nsmallest(5, "Uzaklık")[
     ["L1", "L2", "t", "d", "Stress", "Displacement"]
 ]
 
+nearest = nearest.rename(columns={
+    "L1": "L1 (mm)",
+    "L2": "L2 (mm)",
+    "t": "Et kalınlığı (mm)",
+    "d": "Delik çapı (mm)",
+    "Stress": "Stress (MPa)",
+    "Displacement": "Displacement (mm)",
+})
+
 st.dataframe(nearest, use_container_width=True, hide_index=True)
 
 chart_df = pd.DataFrame({
-    "Sonuç": ["Stress", "Displacement"],
+    "Sonuç": ["Stress (MPa)", "Displacement (mm)"],
     "Tahmin": [pred_stress, pred_disp],
     "Veri ortalaması": [df["Stress"].mean(), df["Displacement"].mean()],
 }).set_index("Sonuç")
@@ -383,7 +392,7 @@ with st.expander("Projenin çalışma mantığı"):
     st.write(
         """
         Model; L1, L2, et kalınlığı ve delik çapını giriş olarak alır.
-        Tüm eğitim verileri 100 N sabit yük altında elde edilmiştir.
+        Tüm eğitim verileri 100 N sabit yük altında elde edilmiştir. Stress birimi MPa (N/mm²), displacement birimi mm olarak gösterilmektedir.
         Model, bu verilerdeki örüntüleri öğrenerek yeni bir L braket tasarımı için
         stress ve displacement değerlerini tahmin eder.
         Bu uygulama yalnızca 100 N yük altındaki hızlı ön değerlendirme içindir;
