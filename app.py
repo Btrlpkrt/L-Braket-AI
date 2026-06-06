@@ -26,6 +26,12 @@ st.markdown("""
         color: #6b7280;
         margin-bottom: 1.5rem;
     }
+    .section-title {
+        color: #0B1F3A;
+        font-size: 1.55rem;
+        font-weight: 800;
+        margin: 0.35rem 0 0.9rem 0;
+    }
     .result-card {
         background: white;
         padding: 1.35rem;
@@ -166,7 +172,10 @@ st.markdown(
 top_left, top_right = st.columns([1.05, 1.45], gap="large")
 
 with top_left:
-    st.markdown("### Seçilen tasarım")
+    st.markdown(
+        '<div class="section-title">Seçilen tasarım</div>',
+        unsafe_allow_html=True
+    )
 
     fig, ax = plt.subplots(figsize=(6, 5))
     ax.set_xlim(0, 130)
@@ -178,7 +187,6 @@ with top_left:
     vertical = min(80, 25 + l2 * 0.50)
     visual_t = max(7, thickness * 1.4)
 
-    # L braket çizimi
     ax.plot(
         [x0, x0 + horizontal],
         [y0, y0],
@@ -197,20 +205,15 @@ with top_left:
         zorder=1
     )
 
-    # Delik L1 üzerinde
-    # Teknik resim mantığında boş silindir/oyuk gibi:
-    # arası beyaz, kenarları iki paralel siyah çizgi
     hole_x = x0 + horizontal * 0.72
     hole_y = y0
 
-    hole_gap = max(2.5, diameter * 0.08)   # iki çizgi arası yarı mesafe
-    hole_half = max(6, diameter * 0.22)    # gösterim yüksekliği
+    hole_gap = max(2.5, diameter * 0.08)
+    hole_half = max(6, diameter * 0.22)
 
-    # Siyah çizgiler mavi çizginin dışına taşmasın
     max_half = visual_t * 0.42
     hole_half = min(hole_half, max_half)
 
-    # Aradaki beyaz boşluk
     white_rect = Rectangle(
         (hole_x - hole_gap, hole_y - hole_half),
         2 * hole_gap,
@@ -221,7 +224,6 @@ with top_left:
     )
     ax.add_patch(white_rect)
 
-    # Sol siyah çizgi
     ax.plot(
         [hole_x - hole_gap, hole_x - hole_gap],
         [hole_y - hole_half, hole_y + hole_half],
@@ -230,7 +232,6 @@ with top_left:
         zorder=6
     )
 
-    # Sağ siyah çizgi
     ax.plot(
         [hole_x + hole_gap, hole_x + hole_gap],
         [hole_y - hole_half, hole_y + hole_half],
@@ -239,7 +240,6 @@ with top_left:
         zorder=6
     )
 
-    # Ölçü yazıları
     ax.annotate(
         f"L1 = {l1:.0f} mm",
         xy=(x0 + horizontal / 2, y0 - 13),
@@ -270,7 +270,10 @@ with top_left:
     st.pyplot(fig, use_container_width=True)
 
 with top_right:
-    st.markdown("### Yapay zekâ tahmini")
+    st.markdown(
+        '<div class="section-title">Yapay zekâ tahmini</div>',
+        unsafe_allow_html=True
+    )
 
     c1, c2 = st.columns(2)
 
@@ -304,7 +307,10 @@ with top_right:
     """, unsafe_allow_html=True)
 
 st.markdown("---")
-st.markdown("### Tasarım karşılaştırması")
+st.markdown(
+    '<div class="section-title">Tasarım karşılaştırması</div>',
+    unsafe_allow_html=True
+)
 
 nearest = df.copy()
 nearest["Uzaklık"] = (
