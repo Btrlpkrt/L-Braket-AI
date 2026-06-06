@@ -165,7 +165,7 @@ with top_left:
     # Delik L1 (yatay kol) üzerindedir.
     # Bu nedenle mevcut bakışta delik görünür ve şematik olarak daire ile gösterilir.
     hole_x = x0 + horizontal * 0.72
-    hole_y = y0 + max(visual_t * 0.22, 2.5)
+    hole_y = y0
     hole_r = max(3.2, diameter * 0.24)
     hole = plt.Circle(
         (hole_x, hole_y),
@@ -194,7 +194,7 @@ with top_left:
     ax.text(
         hole_x,
         hole_y + hole_r + 9,
-        f"Ø {diameter:.1f} mm\n(delik L1 üzerinde)",
+        f"Ø {diameter:.1f} mm",
         va="bottom",
         ha="center",
         fontsize=10
