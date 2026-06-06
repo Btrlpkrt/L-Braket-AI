@@ -1,17 +1,19 @@
 # L Braket AI Tasarım Aracı
 
-## Bilgisayarda çalıştırma
+Bu proje, 100 N sabit yük altında L braket geometrik parametrelerinden stress ve displacement tahmini yapan Streamlit uygulamasıdır.
 
-```bash
-pip install -r requirements.txt
-streamlit run app.py
-```
+## GitHub ve Streamlit Cloud
 
-## İnternete yayımlama
+Bu klasördeki tüm dosyaları GitHub reposuna yükleyin. Streamlit Community Cloud üzerinde ana dosya olarak `app.py` seçin.
 
-1. Bu klasördeki dosyaları bir GitHub deposuna yükleyin.
-2. Streamlit Community Cloud hesabınızı GitHub'a bağlayın.
-3. Yeni uygulama oluştururken ana dosya olarak `app.py` seçin.
-4. Deploy düğmesine basın.
 
-Uygulama, L1, L2, et kalınlığı ve delik çapına göre stress ve displacement tahmini yapar.
+## Birimler
+- Stress: MPa (N/mm²)
+- Displacement: mm
+
+
+Not: Displacement verileri SolidWorks doğrulamasına göre 1/100 ölçeğine dönüştürülmektedir.
+
+
+## Güncel veri seti
+Eski 81 senaryo ile yeni 81 senaryo birleştirilmiştir. Bir ortak geometri yeni SolidWorks sonucu ile güncellendiği için toplam 161 benzersiz tasarım bulunmaktadır.
