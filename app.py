@@ -225,9 +225,22 @@ with top_left:
     hole_x = x0 + horizontal * 0.72
     hole_y = y0
 
-    hole_gap = max(2.5, diameter * 0.08)
+    # Delik çapı arttıkça iki siyah çizgi arasındaki mesafe orantılı büyür.
+    d_min = float(df["d"].min())
+    d_max = float(df["d"].max())
+
+    if d_max > d_min:
+        diameter_ratio = (diameter - d_min) / (d_max - d_min)
+    else:
+        diameter_ratio = 0.5
+
+    min_hole_gap = 1.8
+    max_hole_gap = 6.0
+    hole_gap = min_hole_gap + diameter_ratio * (max_hole_gap - min_hole_gap)
+
     hole_half = max(6, diameter * 0.22)
 
+    # Siyah çizgiler mavi çizginin dışına taşmaz.
     max_half = visual_t * 0.42
     hole_half = min(hole_half, max_half)
 
