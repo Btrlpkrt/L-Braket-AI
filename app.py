@@ -187,7 +187,7 @@ stress_percentile = float((df["Stress"] <= pred_stress).mean() * 100)
 disp_percentile = float((df["Displacement"] <= pred_disp).mean() * 100)
 
 st.markdown(
-    '<div class="author-name">Baturalp</div>',
+    '<div class="author-name">BİLGİSAYAR DESTEKLİ TASARIMDA PROGRAMLAMA TEKNİKLERİ FİNAL PROJESİ - BATURALP</div>',
     unsafe_allow_html=True
 )
 
