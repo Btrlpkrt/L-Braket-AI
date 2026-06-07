@@ -144,17 +144,27 @@ def load_data():
 def train_models(data):
     X = data[["L1", "L2", "t", "d"]]
 
-    # Ara geometrik değerlerde daha sürekli tahmin üretmek için
-    # üçüncü derece polinom regresyon kullanılmıştır.
-    stress_model = Pipeline([
-        ("poly", PolynomialFeatures(degree=3, include_bias=False)),
-        ("model", LinearRegression())
-    ])
+    stress_model = RandomForestRegressor(
+        n_estimators=800,
+        max_depth=None,
+        min_samples_split=2,
+        min_samples_leaf=1,
+        max_features="sqrt",
+        bootstrap=True,
+        random_state=42,
+        n_jobs=-1
+    )
 
-    displacement_model = Pipeline([
-        ("poly", PolynomialFeatures(degree=3, include_bias=False)),
-        ("model", LinearRegression())
-    ])
+    displacement_model = RandomForestRegressor(
+        n_estimators=800,
+        max_depth=None,
+        min_samples_split=2,
+        min_samples_leaf=1,
+        max_features="sqrt",
+        bootstrap=True,
+        random_state=42,
+        n_jobs=-1
+    )
 
     stress_model.fit(X, data["Stress"])
     displacement_model.fit(X, data["Displacement"])
@@ -403,7 +413,7 @@ with top_right:
         <div class="result-card">
             <div class="result-label">TAHMİNİ STRESS (MPa)</div>
             <div class="result-value">{pred_stress:.4f} <span style="font-size:1rem;color:#6b7280;">MPa</span></div>
-            <div class="result-note">100 N yük altında 3. derece Polinom Regresyon tahmini</div>
+            <div class="result-note">100 N yük altında Random Forest tahmini</div>
         </div>
         """, unsafe_allow_html=True)
 
@@ -412,7 +422,7 @@ with top_right:
         <div class="result-card">
             <div class="result-label">TAHMİNİ DISPLACEMENT (mm)</div>
             <div class="result-value">{pred_disp:.4f} <span style="font-size:1rem;color:#6b7280;">mm</span></div>
-            <div class="result-note">100 N yük altında 3. derece Polinom Regresyon tahmini</div>
+            <div class="result-note">100 N yük altında Random Forest tahmini</div>
         </div>
         """, unsafe_allow_html=True)
 

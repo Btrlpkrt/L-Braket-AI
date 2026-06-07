@@ -20,3 +20,7 @@ Eski 81 senaryo ile yeni 81 senaryo birleştirilmiştir. Bir ortak geometri yeni
 
 
 Model, ara değerlerde daha sürekli tahmin için 3. derece Polinom Regresyon olarak güncellenmiştir.
+
+
+## Kullanılan model
+Stress ve displacement tahmini için 800 ağaçlı Random Forest regresyon modeli kullanılmaktadır.
