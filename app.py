@@ -2,7 +2,9 @@ import streamlit as st
 import pandas as pd
 import matplotlib.pyplot as plt
 from matplotlib.patches import Rectangle
-from sklearn.ensemble import RandomForestRegressor
+from sklearn.pipeline import Pipeline
+from sklearn.preprocessing import PolynomialFeatures
+from sklearn.linear_model import LinearRegression
 
 st.set_page_config(
     page_title="L Braket AI Tasarım Aracı",
@@ -142,17 +144,17 @@ def load_data():
 def train_models(data):
     X = data[["L1", "L2", "t", "d"]]
 
-    stress_model = RandomForestRegressor(
-        n_estimators=500,
-        random_state=42,
-        min_samples_leaf=1
-    )
+    # Ara geometrik değerlerde daha sürekli tahmin üretmek için
+    # üçüncü derece polinom regresyon kullanılmıştır.
+    stress_model = Pipeline([
+        ("poly", PolynomialFeatures(degree=3, include_bias=False)),
+        ("model", LinearRegression())
+    ])
 
-    displacement_model = RandomForestRegressor(
-        n_estimators=500,
-        random_state=42,
-        min_samples_leaf=1
-    )
+    displacement_model = Pipeline([
+        ("poly", PolynomialFeatures(degree=3, include_bias=False)),
+        ("model", LinearRegression())
+    ])
 
     stress_model.fit(X, data["Stress"])
     displacement_model.fit(X, data["Displacement"])
@@ -401,7 +403,7 @@ with top_right:
         <div class="result-card">
             <div class="result-label">TAHMİNİ STRESS (MPa)</div>
             <div class="result-value">{pred_stress:.4f} <span style="font-size:1rem;color:#6b7280;">MPa</span></div>
-            <div class="result-note">100 N yük altında Random Forest tahmini</div>
+            <div class="result-note">100 N yük altında 3. derece Polinom Regresyon tahmini</div>
         </div>
         """, unsafe_allow_html=True)
 
@@ -410,7 +412,7 @@ with top_right:
         <div class="result-card">
             <div class="result-label">TAHMİNİ DISPLACEMENT (mm)</div>
             <div class="result-value">{pred_disp:.4f} <span style="font-size:1rem;color:#6b7280;">mm</span></div>
-            <div class="result-note">100 N yük altında Random Forest tahmini</div>
+            <div class="result-note">100 N yük altında 3. derece Polinom Regresyon tahmini</div>
         </div>
         """, unsafe_allow_html=True)
 
