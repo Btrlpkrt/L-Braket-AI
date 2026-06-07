@@ -1,26 +1,19 @@
 # L Braket AI Tasarım Aracı
 
-Bu proje, 100 N sabit yük altında L braket geometrik parametrelerinden stress ve displacement tahmini yapan Streamlit uygulamasıdır.
+Bu paket, SolidWorks sonlu elemanlar analizi verileriyle eğitilen
+Random Forest tabanlı stress ve displacement tahmin uygulamasını içerir.
 
-## GitHub ve Streamlit Cloud
+## Veri seti özeti
 
-Bu klasördeki tüm dosyaları GitHub reposuna yükleyin. Streamlit Community Cloud üzerinde ana dosya olarak `app.py` seçin.
+- Önceki benzersiz tasarım sayısı: 179
+- Yeni SolidWorks senaryo sayısı: 256
+- Tekrarlanan geometri sayısı: 96
+- Nihai benzersiz tasarım sayısı: 339
 
+Aynı geometriye ait tekrar eden kayıtlarda yeni SolidWorks sonuçları esas alınmıştır.
 
-## Birimler
-- Stress: MPa (N/mm²)
-- Displacement: mm
+## Kullanım
 
-
-Not: Displacement verileri SolidWorks doğrulamasına göre 1/100 ölçeğine dönüştürülmektedir.
-
-
-## Güncel veri seti
-Eski 81 senaryo ile yeni 81 senaryo birleştirilmiştir. Bir ortak geometri yeni SolidWorks sonucu ile güncellendiği için toplam 161 benzersiz tasarım bulunmaktadır.
-
-
-Model, ara değerlerde daha sürekli tahmin için 3. derece Polinom Regresyon olarak güncellenmiştir.
-
-
-## Kullanılan model
-Stress ve displacement tahmini için 800 ağaçlı Random Forest regresyon modeli kullanılmaktadır.
+1. Bu klasördeki dosyaları GitHub deposuna yükleyin.
+2. Streamlit uygulamasında Reboot app yapın.
+3. Uygulama açıldığında Random Forest modeli güncel veri setiyle otomatik eğitilir.
