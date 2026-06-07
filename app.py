@@ -196,7 +196,7 @@ with st.sidebar:
 
     st.markdown("---")
     st.info("Uygulanan yük: 100 N (sabit)")
-    st.caption("Eğitim verisi: 339 benzersiz tasarım")
+    st.caption("Eğitim verisi: 485 benzersiz tasarım")
     st.caption(
         "Model yalnızca eğitim verisinin ölçü aralıklarında ve 100 N yük koşulunda kullanılmalıdır."
     )
