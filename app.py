@@ -481,13 +481,33 @@ nearest = nearest.rename(columns={
 
 st.dataframe(nearest, use_container_width=True, hide_index=True)
 
-chart_df = pd.DataFrame({
-    "Sonuç": ["Stress (MPa)", "Displacement (mm)"],
-    "Tahmin": [pred_stress, pred_disp],
-    "Veri ortalaması": [df["Stress"].mean(), df["Displacement"].mean()],
-}).set_index("Sonuç")
+# Stress ve displacement farklı ölçeklerde olduğu için
+# iki ayrı grafikte gösterilir.
+stress_chart_df = pd.DataFrame({
+    "Değer": ["Tahmin", "Veri ortalaması"],
+    "Stress (MPa)": [pred_stress, df["Stress"].mean()],
+}).set_index("Değer")
 
-st.bar_chart(chart_df)
+displacement_chart_df = pd.DataFrame({
+    "Değer": ["Tahmin", "Veri ortalaması"],
+    "Displacement (mm)": [pred_disp, df["Displacement"].mean()],
+}).set_index("Değer")
+
+chart_col1, chart_col2 = st.columns(2, gap="large")
+
+with chart_col1:
+    st.markdown(
+        '<div class="section-title">Stress karşılaştırması</div>',
+        unsafe_allow_html=True
+    )
+    st.bar_chart(stress_chart_df, use_container_width=True)
+
+with chart_col2:
+    st.markdown(
+        '<div class="section-title">Displacement karşılaştırması</div>',
+        unsafe_allow_html=True
+    )
+    st.bar_chart(displacement_chart_df, use_container_width=True)
 
 with st.expander("Projenin çalışma mantığı"):
     st.write(
