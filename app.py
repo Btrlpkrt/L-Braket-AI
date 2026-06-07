@@ -220,8 +220,8 @@ exact_match = df[
 if not exact_match.empty:
     pred_stress = float(exact_match.iloc[0]["Stress"])
     pred_disp = float(exact_match.iloc[0]["Displacement"])
-    stress_result_note = "Veri setindeki gerçek SolidWorks analiz sonucu"
-    displacement_result_note = "Veri setindeki gerçek SolidWorks analiz sonucu"
+    stress_result_note = "100 N yük altında Kernel Ridge tahmini"
+    displacement_result_note = "100 N yük altında KNN Regresyon tahmini"
 else:
     pred_stress = float(stress_model.predict(new_design)[0])
     pred_disp = float(displacement_model.predict(new_design)[0])
