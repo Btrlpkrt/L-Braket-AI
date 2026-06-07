@@ -208,8 +208,25 @@ new_design = pd.DataFrame([{
     "d": diameter,
 }])
 
-pred_stress = float(stress_model.predict(new_design)[0])
-pred_disp = float(displacement_model.predict(new_design)[0])
+# Seçilen tasarım veri setinde birebir varsa tahmin yerine
+# doğrudan gerçek SolidWorks analiz sonucu gösterilir.
+exact_match = df[
+    (df["L1"] == l1)
+    & (df["L2"] == l2)
+    & (df["t"] == thickness)
+    & (df["d"] == diameter)
+]
+
+if not exact_match.empty:
+    pred_stress = float(exact_match.iloc[0]["Stress"])
+    pred_disp = float(exact_match.iloc[0]["Displacement"])
+    stress_result_note = "Veri setindeki gerçek SolidWorks analiz sonucu"
+    displacement_result_note = "Veri setindeki gerçek SolidWorks analiz sonucu"
+else:
+    pred_stress = float(stress_model.predict(new_design)[0])
+    pred_disp = float(displacement_model.predict(new_design)[0])
+    stress_result_note = "100 N yük altında Kernel Ridge tahmini"
+    displacement_result_note = "100 N yük altında KNN Regresyon tahmini"
 
 stress_percentile = float((df["Stress"] <= pred_stress).mean() * 100)
 disp_percentile = float((df["Displacement"] <= pred_disp).mean() * 100)
@@ -397,7 +414,7 @@ with top_right:
         <div class="result-card">
             <div class="result-label">TAHMİNİ STRESS (MPa)</div>
             <div class="result-value">{pred_stress:.4f} <span style="font-size:1rem;color:#6b7280;">MPa</span></div>
-            <div class="result-note">100 N yük altında Kernel Ridge tahmini</div>
+            <div class="result-note">{stress_result_note}</div>
         </div>
         """, unsafe_allow_html=True)
 
@@ -406,7 +423,7 @@ with top_right:
         <div class="result-card">
             <div class="result-label">TAHMİNİ DISPLACEMENT (mm)</div>
             <div class="result-value">{pred_disp:.4f} <span style="font-size:1rem;color:#6b7280;">mm</span></div>
-            <div class="result-note">100 N yük altında KNN Regresyon tahmini</div>
+            <div class="result-note">{displacement_result_note}</div>
         </div>
         """, unsafe_allow_html=True)
 
