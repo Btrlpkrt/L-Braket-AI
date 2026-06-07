@@ -2,7 +2,10 @@ import streamlit as st
 import pandas as pd
 import matplotlib.pyplot as plt
 from matplotlib.patches import Rectangle
-from sklearn.ensemble import RandomForestRegressor
+from sklearn.pipeline import Pipeline
+from sklearn.preprocessing import StandardScaler
+from sklearn.kernel_ridge import KernelRidge
+from sklearn.neighbors import KNeighborsRegressor
 
 st.set_page_config(
     page_title="L Braket AI Tasarım Aracı",
@@ -142,27 +145,15 @@ def load_data():
 def train_models(data):
     X = data[["L1", "L2", "t", "d"]]
 
-    stress_model = RandomForestRegressor(
-        n_estimators=800,
-        max_depth=None,
-        min_samples_split=2,
-        min_samples_leaf=1,
-        max_features="sqrt",
-        bootstrap=True,
-        random_state=42,
-        n_jobs=-1
-    )
+    stress_model = Pipeline([
+        ("scale", StandardScaler()),
+        ("model", KernelRidge(kernel="rbf", alpha=0.001, gamma=0.05))
+    ])
 
-    displacement_model = RandomForestRegressor(
-        n_estimators=800,
-        max_depth=None,
-        min_samples_split=2,
-        min_samples_leaf=1,
-        max_features="sqrt",
-        bootstrap=True,
-        random_state=42,
-        n_jobs=-1
-    )
+    displacement_model = Pipeline([
+        ("scale", StandardScaler()),
+        ("model", KNeighborsRegressor(n_neighbors=7, weights="uniform", p=2))
+    ])
 
     stress_model.fit(X, data["Stress"])
     displacement_model.fit(X, data["Displacement"])
@@ -411,7 +402,7 @@ with top_right:
         <div class="result-card">
             <div class="result-label">TAHMİNİ STRESS (MPa)</div>
             <div class="result-value">{pred_stress:.4f} <span style="font-size:1rem;color:#6b7280;">MPa</span></div>
-            <div class="result-note">100 N yük altında Random Forest tahmini</div>
+            <div class="result-note">100 N yük altında Kernel Ridge tahmini</div>
         </div>
         """, unsafe_allow_html=True)
 
@@ -420,7 +411,7 @@ with top_right:
         <div class="result-card">
             <div class="result-label">TAHMİNİ DISPLACEMENT (mm)</div>
             <div class="result-value">{pred_disp:.4f} <span style="font-size:1rem;color:#6b7280;">mm</span></div>
-            <div class="result-note">100 N yük altında Random Forest tahmini</div>
+            <div class="result-note">100 N yük altında KNN Regresyon tahmini</div>
         </div>
         """, unsafe_allow_html=True)
 
