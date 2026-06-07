@@ -129,16 +129,10 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-@st.cache_data
 def load_data():
-    data = pd.read_csv("L_Braket_Temiz_Veriler.csv")
-
-    # SolidWorks doğrulamasında displacement değerlerinin veri setine
-    # 100 kat büyük aktarıldığı görülmüştür.
-    # Bu nedenle displacement değerleri gerçek mm ölçeğine dönüştürülür.
-    data["Displacement"] = data["Displacement"] / 100.0
-
-    return data
+    # Nihai CSV dosyasında displacement değerleri doğrudan mm birimindedir.
+    # Dosya küçük olduğu için önbelleğe alınmadan her uygulama başlangıcında okunur.
+    return pd.read_csv("L_Braket_Temiz_Veriler.csv")
 
 
 @st.cache_resource
@@ -202,6 +196,7 @@ with st.sidebar:
 
     st.markdown("---")
     st.info("Uygulanan yük: 100 N (sabit)")
+    st.caption("Eğitim verisi: 339 benzersiz tasarım")
     st.caption(
         "Model yalnızca eğitim verisinin ölçü aralıklarında ve 100 N yük koşulunda kullanılmalıdır."
     )
